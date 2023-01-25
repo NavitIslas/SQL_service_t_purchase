@@ -1,0 +1,43 @@
+Tiempo de uso de internet por cuenta
+Instalar librerias
+pip install odfpy
+Importar librerias
+import numpy as np
+from datetime import datetime
+from datetime import timedelta
+import awswrangler as wr
+import pandas as pd
+leer base de excel
+#leer la base de excel
+df = pd.read_excel("segundos.xlsx")
+Traer los primeros 3 registros de la base
+df.head(3)
+ver que tipo de dato tienen los registros de la base
+df.info()
+cambiar las columnas "begin_completa" y "end_completa" que se encuentra como objeto a datetime
+"begin_completa"
+df["begin_completa"] = pd.to_datetime(df["begin_completa"], format='%Y-%m-%d %H:%M:%S')
+df["end_completa"] = pd.to_datetime(df["end_completa"], format='%Y-%m-%d %H:%M:%S')
+verificar que las columnas "begin_completa" y "end_completa" se hayan cambiado correctamente
+df.info()
+quedarnos unicamente con las columnas "cuenta", "begin_completa" y "end_completa" del data frame
+df=df[['cuenta','begin_completa','end_completa']]
+df
+Crear la columna "time_difference" en el dataframe y rellenarla con ceros
+'time_difference'
+df['time_difference']=0
+df
+iterar sobre el dataframe y realizar las opoeraciones para calcular el tiempo transcurrido entre los intervalos de tiempo
+i
+for i in range(len(df)):
+        if i == 0:
+            df.iloc[i,3]=(df.iloc[i,2]-df.iloc[i,1])/ timedelta(seconds=1)
+        else:
+            df.iloc[i,3]=((df.iloc[i,2]-df.iloc[i,1])-(df.iloc[i-1,2]-df.iloc[i,1]))/ timedelta(seconds=1)
+            
+    
+df
+agrupar por cuenta y sumar la columna "time_difference" para cada cuenta
+df1=df.groupby(['cuenta'])[['time_difference']].sum()
+df1
+df1
