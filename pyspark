@@ -1,0 +1,75 @@
+/*Tabla con los datos ip, dominio, device  */
+SELECT client_address, core_domain, dns_message_question, device_id,
+       to_timestamp (CAST(start_time AS int), 'YYYYMMDDHH24MISS',true) as start_time
+FROM bigdata.tp_navegacion_internet
+WHERE info_day= 20230131
+      AND client_address='10.97.180.207'
+limit 100;
+
+
+/*Tabla con cuenta, megas, ip*/
+SELECT cuenta, bytes_subida/1000000 AS megas_subida, bytes_bajada/1000000 AS megas_bajada, ip_cliente,
+       CAST(begintime AS varchar) as begintime,
+       CAST(endtime AS varchar) as endtime,
+       CAST(servicestarttime AS varchar) as servicestarttime
+FROM data_lake.edr_aaa
+WHERE info_day=20230131
+      AND cuenta='0104625969'
+LIMIT 100;
+
+
+SELECT cuenta, COUNT(ip_cliente)
+FROM(SELECT cuenta, ip_cliente
+FROM data_lake.edr_aaa
+WHERE info_day=20230131   
+      AND cuenta in ('0104625969','0107363906','0106397012' )
+GROUP BY cuenta, ip_cliente) 
+GROUP BY cuenta;
+
+
+
+/*Tabla con cuenta, megas, ip*/
+SELECT cuenta, bytes_subida/1000000 AS megas_subida, bytes_bajada/1000000 AS megas_bajada, ip_cliente
+FROM data_lake.edr_aaa
+WHERE info_day=20230131
+      AND cuenta='0104625969';
+      
+
+
+/*Tabla con los datos ip, dominio, device  */
+SELECT client_address, core_domain, dns_message_question, device_id
+FROM bigdata.tp_navegacion_internet
+WHERE info_day= 20230131
+      AND client_address in ('10.97.180.207','172.30.135.91');
+      
+
+SELECT a.cuenta, a.ip_cliente,
+       b.client_address, b.core_domain, b.dns_message_question, b.device_id
+FROM(SELECT cuenta, ip_cliente
+     FROM(SELECT cuenta, ip_cliente
+          FROM data_lake.edr_aaa
+          WHERE info_day=20230131
+                AND cuenta='0104625969')
+     GROUP BY cuenta, ip_cliente) AS a
+JOIN( SELECT client_address, core_domain, dns_message_question, device_id
+      FROM bigdata.tp_navegacion_internet
+      WHERE info_day= 20230131
+            AND client_address in ('10.97.180.207','172.30.135.91')) AS b
+ON a.ip_cliente=b.client_address;
+
+
+
+
+SELECT cuenta, ip_cliente
+FROM(SELECT cuenta, ip_cliente
+     FROM data_lake.edr_aaa
+     WHERE info_day=20230131
+           AND cuenta='0104625969')
+GROUP BY cuenta, ip_cliente;
+
+
+
+SELECT client_address, core_domain, dns_message_question, device_id
+FROM bigdata.tp_navegacion_internet
+WHERE info_day= 20230131
+      AND client_address in ('10.97.180.207','172.30.135.91');
