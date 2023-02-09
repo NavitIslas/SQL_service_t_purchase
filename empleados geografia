@@ -1,0 +1,94 @@
+CREATE TABLE public.cuentas_v_empleados_geo AS(
+SELECT        a.cuenta,
+              a.status,
+              a.created_t,
+              a.vida_util,
+              a.anio_created,
+              a.mes_created,
+              a.status_cuenta,
+              a.motivo_cancelacion,
+              a.cancel_time,anio_cancel,
+              a.mes_cancel,
+              a.oportunidad,
+              a.id_empleado,
+              a.empleado,
+              a.tipo,
+              a.ganada,
+              b.zona,
+              b.desc_servicio,
+              b.cluster,
+              b.distrito,
+              b.ciudad,
+              b.plaza,
+              b.region, 
+              b.tipo_bundle,
+              b.familia, 
+              b.fam_num,
+              c.geolocalizacioninstalacion_la,
+              c.geolocalizacioninstalacion_long,
+              c.planservicio,
+              c.leadsource
+FROM ((SELECT cuenta,
+              status,
+              created_t,
+              vida_util,
+              anio_created,
+              mes_created,
+              status_cuenta,
+              motivo_cancelacion,
+              cancel_time,anio_cancel,
+              mes_cancel,
+              oportunidad,
+              id_empleado,
+              empleado,
+              tipo,
+              ganada
+       FROM public.cuentas_v_empleados) AS a
+       LEFT JOIN(SELECT A.cuenta,
+                        A.zona,
+                        A.desc_servicio,
+                        B.cluster,
+                        B.distrito,
+                        B.ciudad,
+                        B.plaza,
+                        B.region, 
+                        C.tipo_bundle,
+                        C.familia, 
+                        case when familia='TOTALPLAY INTERNET MAS TELEVISION' then 3 else 2 end as fam_num 
+                        FROM (select cuenta, zona, desc_servicio from black_box.cartera where info_day=20230202) A 
+                        LEFT JOIN (SELECT "CLUSTER BRM" AS ZONA,
+                                          "CLUSTER HOMOLOGADO" AS CLUSTER,
+                                          distrito,
+                                          plaza,ciudad,
+                                          region 
+                                   FROM bi.ds_cobertura where partition_0=202301) B 
+                                   ON A.ZONA=B.ZONA 
+                        LEFT JOIN (SELECT PLAN, "TIPO DE BUNDLE" AS tipo_bundle, familia FROM bi.ds_planes_homologados where partition_0='202301' )C 
+                        ON A.desc_servicio=C.plan
+                        --where cuenta = '0112454323'
+                        group by A.cuenta,
+                                 A.zona,
+                                 A.desc_servicio,
+                                 B.cluster,
+                                 B.distrito,
+                                 B.ciudad,
+                                 B.plaza,
+                                 B.region, 
+                                 C.tipo_bundle,
+                                 C.familia,
+                                 fam_num) AS b
+            ON a.cuenta=b.cuenta
+            left join (select idcuentabrm__c as cuenta,
+                              geolocalizacioninstalacion__latitude__s as geolocalizacioninstalacion_la,
+                              geolocalizacioninstalacion__longitude__s as geolocalizacioninstalacion_long,
+                              planservicio__c as planservicio,
+                              leadsource__c as leadsource
+                       from data_staging.slf_cuentafactura__c  where info_day= 20230202 --and idcuentabrm_c='1.5539703'
+                       group by cuenta,
+                                geolocalizacioninstalacion__latitude__s,
+                                geolocalizacioninstalacion__longitude__s,
+                                planservicio__c,
+                                leadsource__c
+                       )as  c
+            ON a.cuenta=c.cuenta));
+COMMIT;
