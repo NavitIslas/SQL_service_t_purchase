@@ -1,0 +1,148 @@
+SELECT a.cuenta ,
+                 a.status,
+                 a.created_t,
+                 a.vida_util,
+                 a.anio_created,
+                 a.mes_created,
+                 a.status_cuenta,
+                 a.motivo_cancelacion,
+                 a.cancel_time,
+                 a.anio_cancel,
+                 a.mes_cancel,
+                 b.oportunidad,
+          	     b.id_empleado,
+          	     b.empleado,
+          	     b.tipo,
+                 b.ganada
+          FROM(
+                SELECT 
+                account_no as cuenta ,
+                status,
+                created_t,
+                vida_util,
+                anio_created,
+                mes_created,
+                status_cuenta,
+                --cancel_t,
+                motivo_cancelacion ,
+                CASE 
+                    WHEN status=10100 OR status=10102 THEN ''
+                    ELSE to_char(cancel_t, 'YYYY-MM-DD HH24:MI:SS')
+    
+                END AS cancel_time,
+                case
+                       when status='10100' or status='10102' then 0
+                       else (CAST(SUBSTRING(cancel_t,1,4) as int))
+                       end as anio_cancel,
+                case
+                       when status='10100' or status='10102' then 0
+                       else (CAST(SUBSTRING(cancel_t,6,2) as int))       
+                       end as mes_cancel 
+                FROM(
+                    SELECT a.account_no,
+                           a.status,
+                           a.created_t,vida_util,
+                           (CAST(SUBSTRING(a.created_t,1,4) as int)) as anio_created,
+                           (CAST(SUBSTRING(a.created_t,6,2) as int)) as mes_created,
+                           a.status_cuenta,
+                           (DATEADD(month, vida_util ,date(created_t))) AS cancel_t,
+                           b.motivo_cancelacion 
+                    FROM(
+                        select 
+                         account_no,
+                         status,created_t,
+                         case when status = '10103' then DATEDIFF(MM , date(created_t), date(from_unixtime(last_status_t)))
+                               when status='10102'  then DATEDIFF(MM , date(created_t), CURRENT_DATE ) 
+                               when status='10100' then DATEDIFF(MM , date(created_t), CURRENT_DATE ) 
+                          end as vida_util,
+    
+                          case when status='10100'
+                            then 'Activo'
+                            When status='10102'
+                            then 'Inactivo'
+                            when status='10103'
+                            then 'Cancelada'
+                          end as status_cuenta
+                          from data_staging.brm_account_t where info_day= 20230101) as a
+                          full join (
+                          SELECT account_no,
+                                 estatuscuentaid,
+                                 subestatuscuentaid,
+                                 motivo_cancelacion
+                          FROM motivo_cancelacion) as b
+                          on a.account_no = b.account_no  
+                --WHERE SUBSTRING(account_no,1,2) = '1.' OR SUBSTRING(account_no,1,3) IN ('010','011'))
+
+                          )
+                GROUP BY
+                account_no,
+                status,
+                created_t,
+                vida_util,
+                anio_created,
+                anio_cancel,
+                mes_cancel,
+                mes_created,
+                cancel_time,
+                status_cuenta,
+                motivo_cancelacion) AS a
+          LEFT JOIN(
+                      select
+                      	op.numerooportunidad__c as oportunidad,
+                      	cf.idcuentabrm__c as cuenta,
+                      	e.id as id_empleado,
+                      	e.name as empleado,
+                      	op.type tipo,
+                      	case
+                      		when ac.account_no is null then 'NO'
+                      		else 'SI'
+                      	end as ganada
+
+                      from
+                      	(
+                      	select
+                      		numerooportunidad__c,
+                      		empleado__c,
+                      		closedate,
+                      		stagename,
+                      		type
+                      	from
+                      		staging_layer.ta_slf_opportunity
+                      	where
+                      		empleado__c is not null
+                      		and empleado__c != ''
+                             ) as op
+                      join (
+                      	select
+                      		idcuentabrm__c,
+                      		folioventa__c
+                      	from
+                      		data_staging.ta_slf_cuentafactura__c
+                      		where info_day = 20230208
+                      		) as cf
+                      on
+                      	op.numerooportunidad__c = cf.folioventa__c
+                      join (
+                      	select
+                      		id,
+                      		name
+                      	from
+                      		data_staging.slf_empleado__c
+                      		where info_day = 20230112
+                      	group by
+                      		id,
+                      		name ) as e 
+                      on
+                      	e.id = op.empleado__c
+                      left join (
+                      	select
+                      		account_no
+                      	from
+                      		data_staging.brm_account_t
+                      		where info_day = 20230208
+                      	group by
+                      		account_no) as ac  
+                      on
+                      	ac.account_no = cf.idcuentabrm__c
+                      ) AS b
+          ON a.cuenta=b.cuenta
