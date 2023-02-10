@@ -1,29 +1,29 @@
-SELECT a.cuenta ,
-                 a.status,
-                 a.created_t,
-                 a.vida_util,
-                 a.anio_created,
-                 a.mes_created,
-                 a.status_cuenta,
-                 a.motivo_cancelacion,
-                 a.cancel_time,
-                 a.anio_cancel,
-                 a.mes_cancel,
-                 b.oportunidad,
-          	     b.id_empleado,
-          	     b.empleado,
-          	     b.tipo,
-                 b.ganada
-          FROM(
+CREATE TABLE public.cuentas_v_empleados AS (
+SELECT c.cuenta ,
+                 c.status,
+                 c.created_t,
+                 c.vida_util,
+                 c.anio_created,
+                 c.mes_created,
+                 c.status_cuenta,
+                 c.motivo_cancelacion,
+                 c.cancel_time,
+                 c.anio_cancel,
+                 c.mes_cancel,
+                 d.oportunidad,
+          	     d.id_empleado,
+          	     d.empleado,
+          	     d.tipo,
+                 d.ganada
+FROM(
                 SELECT 
-                account_no as cuenta ,
+                account_no as cuenta,
                 status,
                 created_t,
                 vida_util,
                 anio_created,
                 mes_created,
                 status_cuenta,
-                --cancel_t,
                 motivo_cancelacion ,
                 CASE 
                     WHEN status=10100 OR status=10102 THEN ''
@@ -47,7 +47,7 @@ SELECT a.cuenta ,
                            a.status_cuenta,
                            (DATEADD(month, vida_util ,date(created_t))) AS cancel_t,
                            b.motivo_cancelacion 
-                    FROM(
+                    FROM((
                         select 
                          account_no,
                          status,created_t,
@@ -63,17 +63,14 @@ SELECT a.cuenta ,
                             when status='10103'
                             then 'Cancelada'
                           end as status_cuenta
-                          from data_staging.brm_account_t where info_day= 20230101) as a
+                          from data_staging.brm_account_t where info_day= 20230208) as a
                           full join (
                           SELECT account_no,
                                  estatuscuentaid,
                                  subestatuscuentaid,
                                  motivo_cancelacion
                           FROM motivo_cancelacion) as b
-                          on a.account_no = b.account_no  
-                --WHERE SUBSTRING(account_no,1,2) = '1.' OR SUBSTRING(account_no,1,3) IN ('010','011'))
-
-                          )
+                          on a.account_no = b.account_no))
                 GROUP BY
                 account_no,
                 status,
@@ -85,8 +82,8 @@ SELECT a.cuenta ,
                 mes_created,
                 cancel_time,
                 status_cuenta,
-                motivo_cancelacion) AS a
-          LEFT JOIN(
+                motivo_cancelacion) AS c
+ LEFT JOIN(
                       select
                       	op.numerooportunidad__c as oportunidad,
                       	cf.idcuentabrm__c as cuenta,
@@ -144,5 +141,6 @@ SELECT a.cuenta ,
                       		account_no) as ac  
                       on
                       	ac.account_no = cf.idcuentabrm__c
-                      ) AS b
-          ON a.cuenta=b.cuenta
+                      ) AS d
+          ON c.cuenta=d.cuenta);
+COMMIT;
