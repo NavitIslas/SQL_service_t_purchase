@@ -1,0 +1,38 @@
+WITH ciudadesmenor AS (
+SELECT ROW_NUMBER() OVER(ORDER BY menor_a_3_meses DESC) AS RowNum,
+       d_estado, ciudad, menor_a_3_meses, mayor_a_3_meses
+FROM( SELECT d_estado, ciudad, SUM( menor_a_3_meses) AS menor_a_3_meses, SUM(mayor_a_3_meses) AS mayor_a_3_meses
+      FROM (SELECT d_estado, ciudad, 
+                   CASE WHEN vida_util <=3 THEN 1
+                        ELSE 0
+                   END menor_a_3_meses,
+                   CASE WHEN vida_util >3 THEN 1
+                        ELSE 0
+                   END mayor_a_3_meses
+            FROM public.cuentas_empleados_geo)
+      GROUP BY d_estado, ciudad)
+)
+
+SELECT RowNum, d_estado, ciudad, menor_a_3_meses, mayor_a_3_meses
+FROM ciudadesmenor
+WHERE RowNum<=100;
+
+
+WITH ciudadesmayor AS (
+SELECT ROW_NUMBER() OVER(ORDER BY mayor_a_3_meses DESC) AS RowNum,
+       d_estado, ciudad, menor_a_3_meses, mayor_a_3_meses
+FROM( SELECT d_estado, ciudad, SUM( menor_a_3_meses) AS menor_a_3_meses, SUM(mayor_a_3_meses) AS mayor_a_3_meses
+      FROM (SELECT d_estado, ciudad, 
+                   CASE WHEN vida_util <=3 THEN 1
+                        ELSE 0
+                   END menor_a_3_meses,
+                   CASE WHEN vida_util >3 THEN 1
+                        ELSE 0
+                   END mayor_a_3_meses
+            FROM public.cuentas_empleados_geo)
+      GROUP BY d_estado, ciudad)
+)
+
+SELECT RowNum, d_estado, ciudad, menor_a_3_meses, mayor_a_3_meses
+FROM ciudadesmayor
+WHERE RowNum<=100;
