@@ -1,3 +1,165 @@
+CREATE TABLE public.cuentas_v_empleados AS (
+SELECT c.cuenta ,
+                 c.status,
+                 c.created_t,
+                 c.vida_util,
+                 c.anio_created,
+                 c.mes_created,
+                 c.status_cuenta,
+                 c.motivo_cancelacion,
+                 c.cancel_time,
+                 c.anio_cancel,
+                 c.mes_cancel,
+                 d.oportunidad,
+          	     d.id_empleado,
+          	     d.empleado,
+          	     d.tipo,
+                 d.ganada
+FROM(
+                SELECT 
+                account_no as cuenta,
+                status,
+                created_t,
+                vida_util,
+                anio_created,
+                mes_created,
+                status_cuenta,
+                motivo_cancelacion ,
+                CASE 
+                    WHEN status=10100 OR status=10102 THEN ''
+                    ELSE to_char(cancel_t, 'YYYY-MM-DD HH24:MI:SS')
+    
+                END AS cancel_time,
+                case
+                       when status='10100' or status='10102' then 0
+                       else (CAST(SUBSTRING(cancel_t,1,4) as int))
+                       end as anio_cancel,
+                case
+                       when status='10100' or status='10102' then 0
+                       else (CAST(SUBSTRING(cancel_t,6,2) as int))       
+                       end as mes_cancel 
+                FROM(
+                    SELECT a.account_no,
+                           a.status,
+                           a.created_t,vida_util,
+                           (CAST(SUBSTRING(a.created_t,1,4) as int)) as anio_created,
+                           (CAST(SUBSTRING(a.created_t,6,2) as int)) as mes_created,
+                           a.status_cuenta,
+                           (DATEADD(month, vida_util ,date(created_t))) AS cancel_t,
+                           b.motivo_cancelacion 
+                    FROM((
+                        select 
+                         account_no,
+                         status,created_t,
+                         case when status = '10103' then DATEDIFF(MM , date(created_t), date(from_unixtime(last_status_t)))
+                               when status='10102'  then DATEDIFF(MM , date(created_t), CURRENT_DATE ) 
+                               when status='10100' then DATEDIFF(MM , date(created_t), CURRENT_DATE ) 
+                          end as vida_util,
+    
+                          case when status='10100'
+                            then 'Activo'
+                            When status='10102'
+                            then 'Inactivo'
+                            when status='10103'
+                            then 'Cancelada'
+                          end as status_cuenta
+                          from data_staging.brm_account_t where info_day= 20230208) as a
+                          full join (
+                          SELECT account_no,
+                                 estatuscuentaid,
+                                 subestatuscuentaid,
+                                 motivo_cancelacion
+                          FROM motivo_cancelacion) as b
+                          on a.account_no = b.account_no))
+                GROUP BY
+                account_no,
+                status,
+                created_t,
+                vida_util,
+                anio_created,
+                anio_cancel,
+                mes_cancel,
+                mes_created,
+                cancel_time,
+                status_cuenta,
+                motivo_cancelacion) AS c
+ LEFT JOIN(
+                      select
+                      	op.numerooportunidad__c as oportunidad,
+                      	cf.idcuentabrm__c as cuenta,
+                      	e.id as id_empleado,
+                      	e.name as empleado,
+                      	op.type tipo,
+                      	case
+                      		when ac.account_no is null then 'NO'
+                      		else 'SI'
+                      	end as ganada
+
+                      from
+                      	(
+                      	select
+                      		numerooportunidad__c,
+                      		empleado__c,
+                      		closedate,
+                      		stagename,
+                      		type
+                      	from
+                      		staging_layer.ta_slf_opportunity
+                      	where
+                      		empleado__c is not null
+                      		and empleado__c != ''
+                             ) as op
+                      join (
+                      	select
+                      		idcuentabrm__c,
+                      		folioventa__c
+                      	from
+                      		data_staging.ta_slf_cuentafactura__c
+                      		where info_day = 20230208
+                      		) as cf
+                      on
+                      	op.numerooportunidad__c = cf.folioventa__c
+                      join (
+                      	select
+                      		id,
+                      		name
+                      	from
+                      		data_staging.slf_empleado__c
+                      		where info_day = 20230112
+                      	group by
+                      		id,
+                      		name ) as e 
+                      on
+                      	e.id = op.empleado__c
+                      left join (
+                      	select
+                      		account_no
+                      	from
+                      		data_staging.brm_account_t
+                      		where info_day = 20230208
+                      	group by
+                      		account_no) as ac  
+                      on
+                      	ac.account_no = cf.idcuentabrm__c
+                      ) AS d
+          ON c.cuenta=d.cuenta);
+COMMIT;
+Footer
+© 2023 GitHub, Inc.
+Footer navigation
+Terms
+Privacy
+Security
+Status
+Docs
+Contact GitHub
+Pricing
+API
+Training
+Blog
+About
+
+
 CREATE TABLE public.cuentas_v_empleados_geo AS(
 SELECT        a.cuenta,
               a.status,
@@ -91,4 +253,87 @@ FROM ((SELECT cuenta,
                                 leadsource__c
                        )as  c
             ON a.cuenta=c.cuenta));
+COMMIT;
+
+CREATE TABLE public.cuentas_empleados_geo AS(
+SELECT a.cuenta,
+              a.status,
+              a.created_t,
+              a.vida_util,
+              a.anio_created,
+              a.mes_created,
+              a.status_cuenta,
+              a.motivo_cancelacion,
+              a.cancel_time,anio_cancel,
+              a.mes_cancel,
+              a.oportunidad,
+              a.id_empleado,
+              a.empleado,
+              a.tipo,
+              a.ganada,
+              a.zona,
+              a.desc_servicio,
+              a.cluster,
+              a.distrito,
+              a.ciudad,
+              a.plaza,
+              a.region, 
+              a.tipo_bundle,
+              a.familia, 
+              a.fam_num,
+              a.geolocalizacioninstalacion_la,
+              a.geolocalizacioninstalacion_long,
+              a.planservicio,
+              a.leadsource,
+              d.d_codigo,
+              d.d_mnpio,
+              d.d_estado 
+FROM((SELECT  cuenta,
+              status,
+              created_t,
+              vida_util,
+              anio_created,
+              mes_created,
+              status_cuenta,
+              motivo_cancelacion,
+              cancel_time,anio_cancel,
+              mes_cancel,
+              oportunidad,
+              id_empleado,
+              empleado,
+              tipo,
+              ganada,
+              zona,
+              desc_servicio,
+              cluster,
+              distrito,
+              ciudad,
+              plaza,
+              region, 
+              tipo_bundle,
+              familia, 
+              fam_num,
+              geolocalizacioninstalacion_la,
+              geolocalizacioninstalacion_long,
+              planservicio,
+              leadsource
+FROM public.cuentas_v_empleados_geo) AS a
+left join (select idcuentabrm__c as cuenta ,
+                              d_codigo,
+                              d_mnpio,
+                              d_estado 
+                       from(SELECT cf.idcuentabrm__c,
+                                   s.d_codigo,
+                                   s.d_mnpio,
+                                   s.d_estado
+                            FROM nuevos_negocios.sepomex AS s 
+                            JOIN data_staging.slf_cuentafactura__c AS cf
+                            ON s.d_codigo=cf.codigopostalinstalacion__c
+                            WHERE cf.info_day = 20230208)
+                       group by cuenta ,
+                                d_codigo,
+                                d_mnpio,
+                                d_estado) as d
+             ON a.cuenta=d.cuenta)
+);
 COMMIT;
