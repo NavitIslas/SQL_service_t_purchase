@@ -1,0 +1,47 @@
+SELECT t1.id_empleado, t1.empleado, t1.genero, t1.total_genero AS total_vendido , t1.total_nse
+FROM(SELECT id_empleado, empleado, genero, COUNT (genero) AS total_genero ,
+            LISTAGG(DISTINCT nse, '| ') WITHIN GROUP(ORDER BY nse) as total_nse
+     FROM(SELECT a.cuenta, a.status, a.created_t, a.vida_util, a.anio_created, a.mes_created, a.status_cuenta, a.motivo_cancelacion,
+                 a.cancel_time, a.anio_cancel, a.mes_cancel, a.oportunidad, a.id_empleado, a.empleado, a.tipo,ganada, a.zona, a.desc_servicio,
+                 a.cluster, a.distrito, a.ciudad, a.plaza, a.region, a.tipo_bundle, a.familia, a.fam_num, a.geolocalizacioninstalacion_la,
+                 a.geolocalizacioninstalacion_long, a.planservicio, a.leadsource, a.d_codigo, a.d_mnpio, a.d_estado,
+                 b.genero, b.edad,
+                 c.nse   
+          FROM ( SELECT cuenta,status,created_t,vida_util,anio_created,mes_created,status_cuenta,motivo_cancelacion,
+                        cancel_time,anio_cancel,mes_cancel,oportunidad,id_empleado,empleado,tipo,ganada,zona,desc_servicio,
+                        cluster,distrito,ciudad,plaza,region,tipo_bundle,familia,fam_num,geolocalizacioninstalacion_la,
+                        geolocalizacioninstalacion_long,planservicio,leadsource,d_codigo,d_mnpio,d_estado
+                 FROM public.cuentas_empleados_geo) AS a
+          LEFT JOIN (SELECT cuenta, genero, edad
+                     FROM bi.ds_edad_genero) AS b
+          ON a.cuenta=b.cuenta
+          LEFT JOIN (SELECT cuenta, nse 
+                     FROM data_lake.nse 
+                     WHERE info_day IN (SELECT max(info_day) from data_lake.nse)) AS c
+          ON a.cuenta=c.cuenta)
+     GROUP BY id_empleado, empleado, genero) AS t1
+GROUP BY t1.id_empleado, t1.empleado, t1.genero, t1.total_genero, t1.total_nse
+HAVING t1.total_genero=(SELECT MAX(t2.total_genero)
+                      FROM(SELECT id_empleado, empleado, genero, COUNT (genero) AS total_genero ,
+                                  LISTAGG(DISTINCT nse, '| ') WITHIN GROUP(ORDER BY nse) as total_nse
+                           FROM(SELECT a.cuenta, a.status, a.created_t, a.vida_util, a.anio_created, a.mes_created, a.status_cuenta, a.motivo_cancelacion,
+                                       a.cancel_time, a.anio_cancel, a.mes_cancel, a.oportunidad, a.id_empleado, a.empleado, a.tipo,ganada, a.zona, a.desc_servicio,
+                                       a.cluster, a.distrito, a.ciudad, a.plaza, a.region, a.tipo_bundle, a.familia, a.fam_num, a.geolocalizacioninstalacion_la,
+                                       a.geolocalizacioninstalacion_long, a.planservicio, a.leadsource, a.d_codigo, a.d_mnpio, a.d_estado,
+                                       b.genero, b.edad,
+                                       c.nse   
+                                FROM ( SELECT cuenta,status,created_t,vida_util,anio_created,mes_created,status_cuenta,motivo_cancelacion,
+                                              cancel_time,anio_cancel,mes_cancel,oportunidad,id_empleado,empleado,tipo,ganada,zona,desc_servicio,
+                                              cluster,distrito,ciudad,plaza,region,tipo_bundle,familia,fam_num,geolocalizacioninstalacion_la,
+                                              geolocalizacioninstalacion_long,planservicio,leadsource,d_codigo,d_mnpio,d_estado
+                                       FROM public.cuentas_empleados_geo) AS a
+                                LEFT JOIN (SELECT cuenta, genero, edad
+                                           FROM bi.ds_edad_genero) AS b
+                                ON a.cuenta=b.cuenta
+                                LEFT JOIN (SELECT cuenta, nse 
+                                           FROM data_lake.nse 
+                                           WHERE info_day IN (SELECT max(info_day) from data_lake.nse)) AS c
+                                ON a.cuenta=c.cuenta)
+                           GROUP BY id_empleado, empleado, genero) AS t2
+                           WHERE t1.id_empleado=t2.id_empleado)
+LIMIT 100;
