@@ -1,0 +1,19 @@
+SELECT a.account_no, a.paquete_inicial , a.fecha_inicial,
+       b.paquete_final , b.fecha_final
+FROM
+(SELECT RowNum_i,account_no, paquete_inicial , fecha_inicial 
+FROM(
+SELECT ROW_NUMBER() OVER(PARTITION BY account_no ORDER BY info_day) AS RowNum_i,
+       account_no, aac_package as paquete_inicial , info_day as fecha_inicial 
+FROM data_staging.brm_account_t
+WHERE account_no IN ('0100001090','0100000694'))
+WHERE RowNum_i=1)  AS a
+JOIN (   
+SELECT RowNum_f,account_no, paquete_final , fecha_final
+FROM(
+SELECT ROW_NUMBER() OVER(PARTITION BY account_no ORDER BY info_day DESC ) AS RowNum_f,
+       account_no, aac_package as paquete_final , info_day as fecha_final
+FROM data_staging.brm_account_t
+WHERE account_no IN ('0100001090','0100000694'))
+WHERE RowNum_f=1) AS b
+ON a.account_no=b.account_no;
