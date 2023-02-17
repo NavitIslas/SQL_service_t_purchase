@@ -1,0 +1,119 @@
+SELECT 1 AS mes,
+       COUNT(DISTINCT subscriberkey) AS total_cuentas,
+       SUM(correos_enviados) AS correos_enviados,
+       SUM(links_abiertos) AS links_abiertos,
+       SUM(clicks_dados) AS clicks_dados,
+       SUM(CASE WHEN target='ALCANZADO' THEN 1
+                ELSE 0
+           END) AS ojetivo_alcanzado     
+FROM public.clicks_enero_2022
+UNION
+SELECT 2 AS mes,
+       COUNT(DISTINCT subscriberkey) AS total_cuentas,
+       SUM(correos_enviados) AS correos_enviados,
+       SUM(links_abiertos) AS links_abiertos,
+       SUM(clicks_dados) AS clicks_dados,
+       SUM(CASE WHEN target='ALCANZADO' THEN 1
+                ELSE 0
+           END) AS ojetivo_alcanzado     
+FROM public.clicks_febrero_2022
+UNION
+SELECT 3 AS mes,
+       COUNT(DISTINCT subscriberkey) AS total_cuentas,
+       SUM(correos_enviados) AS correos_enviados,
+       SUM(links_abiertos) AS links_abiertos,
+       SUM(clicks_dados) AS clicks_dados,
+       SUM(CASE WHEN target='ALCANZADO' THEN 1
+                ELSE 0
+           END) AS ojetivo_alcanzado     
+FROM public.clicks_marzo_2022
+UNION
+SELECT 4 AS mes,
+       COUNT(DISTINCT subscriberkey) AS total_cuentas,
+       SUM(correos_enviados) AS correos_enviados,
+       SUM(links_abiertos) AS links_abiertos,
+       SUM(clicks_dados) AS clicks_dados,
+       SUM(CASE WHEN target='ALCANZADO' THEN 1
+                ELSE 0
+           END) AS ojetivo_alcanzado     
+FROM public.clicks_abril_2022
+UNION
+SELECT 5 AS mes,
+       COUNT(DISTINCT subscriberkey) AS total_cuentas,
+       SUM(correos_enviados) AS correos_enviados,
+       SUM(links_abiertos) AS links_abiertos,
+       SUM(clicks_dados) AS clicks_dados,
+       SUM(CASE WHEN target='ALCANZADO' THEN 1
+                ELSE 0
+           END) AS ojetivo_alcanzado     
+FROM public.clicks_mayo_2022
+UNION
+SELECT 6 AS mes,
+       COUNT(DISTINCT subscriberkey) AS total_cuentas,
+       SUM(correos_enviados) AS correos_enviados,
+       SUM(links_abiertos) AS links_abiertos,
+       SUM(clicks_dados) AS clicks_dados,
+       SUM(CASE WHEN target='ALCANZADO' THEN 1
+                ELSE 0
+           END) AS ojetivo_alcanzado     
+FROM public.clicks_junio_2022
+UNION
+SELECT 7 AS mes,
+       COUNT(DISTINCT subscriberkey) AS total_cuentas,
+       SUM(correos_enviados) AS correos_enviados,
+       SUM(links_abiertos) AS links_abiertos,
+       SUM(clicks_dados) AS clicks_dados,
+       SUM(CASE WHEN target='ALCANZADO' THEN 1
+                ELSE 0
+           END) AS ojetivo_alcanzado     
+FROM public.clicks_julio_2022
+UNION
+SELECT 8 AS mes,
+       COUNT(DISTINCT subscriberkey) AS total_cuentas,
+       SUM(correos_enviados) AS correos_enviados,
+       SUM(links_abiertos) AS links_abiertos,
+       SUM(clicks_dados) AS clicks_dados,
+       SUM(CASE WHEN target='ALCANZADO' THEN 1
+                ELSE 0
+           END) AS ojetivo_alcanzado     
+FROM public.clicks_agosto_2022
+UNION
+SELECT 9 AS mes,
+       COUNT(DISTINCT subscriberkey) AS total_cuentas,
+       SUM(correos_enviados) AS correos_enviados,
+       SUM(links_abiertos) AS links_abiertos,
+       SUM(clicks_dados) AS clicks_dados,
+       SUM(CASE WHEN target='ALCANZADO' THEN 1
+                ELSE 0
+           END) AS ojetivo_alcanzado     
+FROM public.clicks_septiembre_2022
+UNION 
+SELECT 10 AS mes,
+       COUNT(DISTINCT subscriberkey) AS total_cuentas,
+       SUM(correos_enviados) AS correos_enviados,
+       SUM(links_abiertos) AS links_abiertos,
+       SUM(clicks_dados) AS clicks_dados,
+       SUM(CASE WHEN target='ALCANZADO' THEN 1
+                ELSE 0
+           END) AS ojetivo_alcanzado     
+FROM public.clicks_octubre_2022
+UNION
+SELECT 11 AS mes,
+       COUNT(DISTINCT subscriberkey) AS total_cuentas,
+       SUM(correos_enviados) AS correos_enviados,
+       SUM(links_abiertos) AS links_abiertos,
+       SUM(clicks_dados) AS clicks_dados,
+       SUM(CASE WHEN target='ALCANZADO' THEN 1
+                ELSE 0
+           END) AS ojetivo_alcanzado     
+FROM public.clicks_noviembre_2022
+UNION
+SELECT 12 AS mes,
+       COUNT(DISTINCT subscriberkey) AS total_cuentas,
+       SUM(correos_enviados) AS correos_enviados,
+       SUM(links_abiertos) AS links_abiertos,
+       SUM(clicks_dados) AS clicks_dados,
+       SUM(CASE WHEN target='ALCANZADO' THEN 1
+                ELSE 0
+           END) AS ojetivo_alcanzado     
+FROM public.clicks_diciembre_2022;
