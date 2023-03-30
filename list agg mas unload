@@ -1,0 +1,14 @@
+unload($$
+SELECT nombre_canal,
+       listagg(distinct programa,',') 
+       within group (order by nombre_canal) as programas
+FROM devsie.data_lake.television_live
+WHERE info_day BETWEEN 20230301 AND 20230328
+GROUP BY nombre_canal
+      $$)
+TO 's3://data-lake-tp/programastv/202303/programas_tv_202303.csv'
+PARALLEL OFF
+header 
+iam_role 'arn:aws:iam::903746939682:role/ReadTP'
+CSV DELIMITER AS  '|'
+GZIP;
