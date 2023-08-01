@@ -1,0 +1,27 @@
+SELECT a.cuenta,
+       a.monto-lag(a.monto) OVER (PARTITION BY a.cuenta ORDER BY a.fecha ASC) AS diferencias
+FROM credito.payments a 
+RIGHT JOIN (
+            SELECT
+                  cuenta,
+                  idclienteunico,
+                  fechaactivacion,
+                  regiondsc,
+                  clusterdsc,
+                  nse,
+                  estatuscuenta,
+                  negocio,
+                  edad_e,
+                  behaviorscore_brm,
+                  creditscore_sas as score,
+                  estado,
+                  medio_pago_favorito,
+                  pago_domiciliado
+            FROM data_lake.vista_unica_cuenta
+            WHERE info_day IN (SELECT MAX(info_day) 
+                               FROM data_lake.vista_unica_cuenta)
+                  AND negocio IN ('RESIDENCIAL_FISICA_ACT_EMP','RESIDENCIAL_FISICA')
+            ) b ON a.cuenta=b.cuenta
+WHERE a.fecha >= '2022-07-28 00:00:00' AND  a.fecha < '2023-07-28 00:00:00'
+ORDER BY  a.cuenta
+LIMIT 100;
