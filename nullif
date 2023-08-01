@@ -1,0 +1,12 @@
+SELECT
+  no_cuenta,
+  COALESCE(
+    NULLIF(linea_credito6, 0),
+    NULLIF(linea_credito5, 0),
+    NULLIF(linea_credito4, 0),
+    NULLIF(linea_credito3, 0),
+    NULLIF(linea_credito2, 0),
+    linea_credito1
+  ) AS ultima_linea_credito
+FROM  data_lake.base_final_homologada_salida14
+where no_cuenta = '0100000516';
