@@ -1,0 +1,12 @@
+WITH tabla1 AS (
+                SELECT a.numero_de_cuenta AS cuenta,a.facescan,a.identificacion,
+                       b.antiguedad,b.estatus_cta,b.score
+                FROM (SELECT numero_de_cuenta,facescan,identificacion
+                      FROM data_lake.funnel_adopcion_extract) AS a
+                LEFT JOIN (
+                            SELECT cuenta,estatus_cta,score AS score,
+                                   ROUND(MONTHS_BETWEEN(CURRENT_DATE,TO_DATE(fecha_activacion, 'YYYY-MM-DD')), 0) AS antiguedad
+                            FROM black_box.cartera
+                            ) AS b
+                ON a.numero_de_cuenta=b.cuenta
+)
